@@ -1,0 +1,215 @@
+﻿@page
+@model AdminModel
+@{
+    ViewData["Title"] = "Admin View";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .custom-form {
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            padding: 20px;
+        }
+
+        .form-footer {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .contacts-container {
+            margin-top: 20px;
+        }
+
+        .table th,
+        .table td {
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <a href="/Index" class="btn btn-danger">Logout</a>
+        <h1 class="text-center">Add Contact Form</h1>
+
+        <div class="custom-form">
+            <form method="post">
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="firstName">First Name</label>
+                            <input type="text" class="form-control" id="firstName" name="FirstName" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="lastName">Last Name</label>
+                            <input type="text" class="form-control" id="lastName" name="LastName" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" id="email" name="Email" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <select class="form-control" id="title" name="Title" required>
+                                <option value="Mr">Mr</option>
+                                <option value="Mrs">Mrs</option>
+                                <option value="Ms">Ms</option>
+                                <option value="Dr">Dr</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group form-check">
+                    <input type="checkbox" class="form-check-input" id="marriageStatus" name="MarriageStatus">
+                    <label class="form-check-label" for="marriageStatus">Married? (if yes check the box)</label>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description</label>
+                    <textarea class="form-control" id="description" name="Description"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="dateOfBirth">Date of Birth</label>
+                            <input type="date" class="form-control" id="dateOfBirth" name="DateOfBirth">
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="role">Role</label>
+                            <select class="form-control" id="role" name="Role" required>
+                                <option value="Admin">Admin</option>
+                                <option value="User">User</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" id="username" name="Username" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" id="password" name="Password" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-footer">
+                    <button type="submit" class="btn btn-primary" id="addContactButton">Add Contact</button>
+                </div>
+            </form>
+        </div>
+
+        <hr>
+
+        <div class="container contacts-container">
+            <h1 class="text-center">Contacts List</h1>
+            <div class="form-group">
+                <label for="search"><b>Search</b></label>
+                <input type="text" class="form-control" id="search" name="Search" onkeyup="filterContacts()" placeholder="Search by first name, last name, or email">
+            </div>
+
+            <table class="table table-bordered table-striped" id="contactsTable">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Email</th>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Date of Birth</th>
+                        <th>Marriage Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var contact in Model.Contacts)
+                    {
+                        <tr>
+                            <td>@contact.FirstName</td>
+                            <td>@contact.LastName</td>
+                            <td>@contact.Email</td>
+                            <td>@contact.Title</td>
+                            <td>@contact.Description</td>
+                            <td>@contact.DateOfBirth.ToShortDateString()</td>
+                            <td>@(contact.MarriageStatus ? "Married" : "Single")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        document.getElementById("addContactButton").addEventListener("click", function (event) {
+            const firstName = document.getElementById("firstName").value;
+            const lastName = document.getElementById("lastName").value;
+            const email = document.getElementById("email").value;
+            const title = document.getElementById("title").value;
+            const dateOfBirth = document.getElementById("dateOfBirth").value;
+            const username = document.getElementById("username").value;
+            const password = document.getElementById("password").value;
+            const role = document.getElementById("role").value;
+
+            const usernameRegex = /^[a-zA-Z0-9]+$/;
+            if (!usernameRegex.test(username)) {
+                event.preventDefault();
+                alert("Username can only contain letters and numbers.");
+                return;
+            }
+
+            if (password.length < 8) {
+                event.preventDefault();
+                alert("Password must be at least 8 characters long.");
+                return;
+            }
+
+            if (!firstName || !lastName || !email || !title || !dateOfBirth || !role) {
+                event.preventDefault();
+                alert("Please fill in all required fields (First Name, Last Name, Email, Title, and Date of Birth).");
+            }
+        });
+
+        function filterContacts() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("search");
+            filter = input.value.toUpperCase();
+            table = document.getElementById("contactsTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 0; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td");
+                for (var j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            tr[i].style.display = "";
+                            break;
+                        } else {
+                            tr[i].style.display = "none";
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
