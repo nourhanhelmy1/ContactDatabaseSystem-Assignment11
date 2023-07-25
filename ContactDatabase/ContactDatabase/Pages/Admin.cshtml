@@ -1,4 +1,4 @@
-﻿@page
+@page
 @model AdminModel
 @{
     ViewData["Title"] = "Admin View";
@@ -36,7 +36,7 @@
         <a href="/Index" class="btn btn-danger">Logout</a>
         <h1 class="text-center">Add Contact Form</h1>
 
-        <div class="custom-form">
+        <div class="custom-form" id="addContactForm">
             <form method="post">
                 <div class="row">
                     <div class="col">
@@ -135,12 +135,14 @@
                         <th>Description</th>
                         <th>Date of Birth</th>
                         <th>Marriage Status</th>
+                        <th>Edit</th>
+
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var contact in Model.Contacts)
                     {
-                        <tr>
+                        <tr data-username="@contact.Username">
                             <td>@contact.FirstName</td>
                             <td>@contact.LastName</td>
                             <td>@contact.Email</td>
@@ -148,6 +150,9 @@
                             <td>@contact.Description</td>
                             <td>@contact.DateOfBirth.ToShortDateString()</td>
                             <td>@(contact.MarriageStatus ? "Married" : "Single")</td>
+                            <td>
+                                <button type="button" class="btn btn-info" onclick="editContact('@contact.FirstName', '@contact.LastName', '@contact.Email', '@contact.Title', '@contact.Description', '@contact.DateOfBirth', '@contact.MarriageStatus', '@contact.Username')">Edit</button>
+                            </td>
                         </tr>
                     }
                 </tbody>
@@ -155,10 +160,139 @@
         </div>
     </div>
 
+    <div class="custom-form" id="editContactForm" style="display: none;">
+        <form method="post" asp-page-handler="Update">
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editFirstName">First Name</label>
+                        <input type="text" class="form-control" id="editFirstName" name="FirstName" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editLastName">Last Name</label>
+                        <input type="text" class="form-control" id="editLastName" name="LastName" required>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editEmail">Email</label>
+                        <input type="email" class="form-control" id="editEmail" name="Email" required>
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editTitle">Title</label>
+                        <select class="form-control" id="editTitle" name="Title" required>
+                            <option value="Mr">Mr</option>
+                            <option value="Mrs">Mrs</option>
+                            <option value="Ms">Ms</option>
+                            <option value="Dr">Dr</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group form-check">
+                <input type="checkbox" class="form-check-input" id="editMarriageStatus" name="MarriageStatus">
+                <label class="form-check-label" for="editMarriageStatus">Married? (if yes check the box)</label>
+            </div>
+            <div class="form-group">
+                <label for="editDescription">Description</label>
+                <textarea class="form-control" id="editDescription" name="Description"></textarea>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editDateOfBirth">Date of Birth</label>
+                        <input type="date" class="form-control" id="editDateOfBirth" name="DateOfBirth">
+                    </div>
+                </div>
+                <div class="col">
+                    <div class="form-group">
+                        <label for="editRole">Role</label>
+                        <select class="form-control" id="editRole" name="Role" required>
+                            <option value="Admin">Admin</option>
+                            <option value="User">User</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-footer">
+                <button type="button" class="btn btn-primary" id="updateContactButton">Update Contact</button>
+            </div>
+        </form>
+    </div>
+
+
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
+        function editContact(firstName, lastName, email, title, description, dateOfBirth, marriageStatus, username) {
+            document.getElementById("editFirstName").value = firstName;
+            document.getElementById("editLastName").value = lastName;
+            document.getElementById("editEmail").value = email;
+            document.getElementById("editTitle").value = title;
+            document.getElementById("editDescription").value = description;
+            document.getElementById("editDateOfBirth").value = formatDate(dateOfBirth);
+            document.getElementById("editMarriageStatus").checked = marriageStatus;
+
+            document.getElementById("addContactForm").style.display = "none";
+            document.getElementById("editContactForm").style.display = "block";
+
+            document.getElementById("updateContactButton").setAttribute("onclick", `updateContact('${username}')`);
+        }
+
+        function formatDate(date) {
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = ("0" + (d.getMonth() + 1)).slice(-2);
+            const day = ("0" + d.getDate()).slice(-2);
+            return `${year}-${month}-${day}`;
+        }
+
+        function updateContact(username) {
+            const firstName = document.getElementById("editFirstName").value;
+            const lastName = document.getElementById("editLastName").value;
+            const email = document.getElementById("editEmail").value;
+            const title = document.getElementById("editTitle").value;
+            const description = document.getElementById("editDescription").value;
+            const dateOfBirth = document.getElementById("editDateOfBirth").value;
+            const marriageStatus = document.getElementById("editMarriageStatus").checked;
+            const role = document.getElementById("editRole").value;
+
+            const contactData = {
+                FirstName: firstName,
+                LastName: lastName,
+                Email: email,
+                Title: title,
+                Description: description,
+                DateOfBirth: dateOfBirth,
+                MarriageStatus: marriageStatus,
+                Role: role,
+            };
+
+            console.log(contactData);
+
+            $.ajax({
+                url: `/Admin?handler=Update&username=${encodeURIComponent(username)}`,
+                type: 'POST',
+                data: JSON.stringify(contactData),
+                contentType: 'application/json',
+                success: function () {
+                    document.getElementById("editContactForm").style.display = "none";
+                    document.getElementById("addContactForm").style.display = "block";
+                    location.reload();
+                },
+                error: function (error) {
+                    console.error('Error updating contact:', error);
+                }
+            });
+        }
+
         document.getElementById("addContactButton").addEventListener("click", function (event) {
             const firstName = document.getElementById("firstName").value;
             const lastName = document.getElementById("lastName").value;
